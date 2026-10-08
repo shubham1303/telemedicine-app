@@ -1,0 +1,18 @@
+node_modules/
+frontend/build/
+.env.local
+.DS_Store
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform/terraform.tfvars
+terraform/backend.hcl
+
+# lambda build artifacts
+lambdas/*/function.zip
+
+# scratch files from testing with the aws cli
+provider*.json
+response.json

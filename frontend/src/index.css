@@ -1,0 +1,32 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Amplify UI dark theme overrides */
+[data-amplify-authenticator] {
+  --amplify-colors-background-primary: #0f172a;
+  --amplify-colors-background-secondary: #1e293b;
+  --amplify-colors-brand-primary-10: #1e293b;
+  --amplify-colors-brand-primary-80: #3b82f6;
+  --amplify-colors-brand-primary-90: #2563eb;
+  --amplify-colors-brand-primary-100: #1d4ed8;
+  --amplify-colors-font-primary: #f1f5f9;
+  --amplify-colors-font-secondary: #94a3b8;
+  --amplify-colors-border-primary: #334155;
+  --amplify-components-authenticator-container-width-max: 420px;
+  --amplify-fonts-default-variable: 'Inter', sans-serif;
+}

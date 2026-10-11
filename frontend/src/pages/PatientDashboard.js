@@ -42,7 +42,8 @@ export default function PatientDashboard() {
     const res = await fetch(`${API}/appointments`, {
       method: "POST",
       headers: { Authorization: token, "Content-Type": "application/json" },
-      body: JSON.stringify({ providerId: selectedProvider, dateTime }),
+      // datetime-local has no timezone, so convert to UTC here (the reminder job works in UTC)
+      body: JSON.stringify({ providerId: selectedProvider, dateTime: new Date(dateTime).toISOString() }),
     });
     const data = await res.json();
     setMessage({ text: data.message, type: res.ok ? "success" : "error" });

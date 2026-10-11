@@ -10,6 +10,17 @@ ses      = boto3.client("ses")
 APPOINTMENTS_TABLE = os.environ["APPOINTMENTS_TABLE"]
 SES_EMAIL          = os.environ["SES_EMAIL"]
 
+
+def readable(value):
+    """Nov 20, 2026, 15:30 UTC, for emails"""
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc).strftime("%b %d, %Y, %H:%M UTC")
+    except ValueError:
+        return value
+
 def lambda_handler(event, context):
     """
     Triggered by EventBridge every hour.
@@ -17,9 +28,11 @@ def lambda_handler(event, context):
     """
     appointments_table = dynamodb.Table(APPOINTMENTS_TABLE)
 
+    # appointments are stored in UTC as "2026-11-20T15:30:00Z" (see book_appointment),
+    # so the window has to be in exactly that format for the string comparison to work
     now       = datetime.now(timezone.utc)
-    window_start = (now + timedelta(hours=23, minutes=30)).isoformat()
-    window_end   = (now + timedelta(hours=24, minutes=30)).isoformat()
+    window_start = (now + timedelta(hours=23, minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    window_end   = (now + timedelta(hours=24, minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Scan for confirmed appointments in the 24hr window
     result = appointments_table.scan(
@@ -49,7 +62,7 @@ def lambda_handler(event, context):
                         "Subject": {"Data": "Appointment Reminder — Tomorrow"},
                         "Body": {"Text": {"Data": (
                             f"This is a reminder that you have an appointment "
-                            f"with {provider_name} tomorrow at {date_time}.\n\n"
+                            f"with {provider_name} tomorrow at {readable(date_time)}.\n\n"
                             f"Appointment ID: {appointment_id}"
                         )}}
                     }
@@ -67,7 +80,7 @@ def lambda_handler(event, context):
                     Message={
                         "Subject": {"Data": "Appointment Reminder — Tomorrow"},
                         "Body": {"Text": {"Data": (
-                            f"Reminder: you have an appointment tomorrow at {date_time}.\n\n"
+                            f"Reminder: you have an appointment tomorrow at {readable(date_time)}.\n\n"
                             f"Appointment ID: {appointment_id}"
                         )}}
                     }

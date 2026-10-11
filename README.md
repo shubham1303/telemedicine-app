@@ -110,15 +110,16 @@ that address before alarms start arriving. Cost-wise it should fit in the free t
 
 Still rough in a few places:
 
-- Providers created from the admin screen get a random UUID as `providerId`, but the
-  appointment lambdas match providers by their Cognito `sub`. So a provider added
-  through the UI can't see their appointments yet. I've been working around it by
-  inserting provider rows by hand. This is the next thing to fix.
-- Deactivating a provider fails because `DELETE` has no body and the handler tries
-  to `json.loads` it.
-- Appointment times are stored as the browser's local time without a timezone, while
-  the reminder job compares in UTC. So reminders are off by your UTC offset.
-- Double-booking is only caught if the times match exactly.
+- Double-booking is only caught if the times match exactly, so 10:00 and 10:15 with
+  the same provider both go through.
 - The post-confirmation lambda ARN is passed as a variable to get around a circular
   dependency between the user pool and the lambda, which makes a first deploy into a
   fresh account a two-step thing.
+- Confirmation/reminder emails that fail (e.g. SES sandbox, unverified address) are
+  caught and logged but don't count as Lambda errors, so they only show up in the
+  dashboard's log panel.
+
+Fixed recently: providers added from the admin screen now get their Cognito `sub` as
+their id (before, they got a random UUID and could never see their appointments),
+deactivating a provider no longer crashes, and appointment times are stored in UTC
+so the reminders go out at the right time.

@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           <p style={styles.statLabel}>Total Appointments</p>
         </div>
         <div style={styles.statCard}>
-          <p style={{ ...styles.statNum, color: "#10b981" }}>{providers.length}</p>
+          <p style={{ ...styles.statNum, color: "#10b981" }}>{providers.filter(p => p.active).length}</p>
           <p style={styles.statLabel}>Active Providers</p>
         </div>
         <div style={styles.statCard}>

@@ -2,12 +2,24 @@ import boto3
 import os
 import json
 from boto3.dynamodb.conditions import Key
+from datetime import datetime, timezone
 
 dynamodb = boto3.resource("dynamodb")
 ses = boto3.client("ses")
 
 APPOINTMENTS_TABLE = os.environ["APPOINTMENTS_TABLE"]
 SES_EMAIL          = os.environ["SES_EMAIL"]
+
+
+def readable(value):
+    """Nov 20, 2026, 15:30 UTC, for emails. Times are stored in UTC"""
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc).strftime("%b %d, %Y, %H:%M UTC")
+    except ValueError:
+        return value
 
 def lambda_handler(event, context):
     # Extract user info from Cognito JWT
@@ -75,7 +87,7 @@ def lambda_handler(event, context):
                 "Subject": {"Data": f"Appointment {new_status.capitalize()}"},
                 "Body": {"Text": {"Data": (
                     f"Your appointment with {appointment['providerName']} "
-                    f"on {appointment['dateTime']} has been {new_status}.\n\n"
+                    f"on {readable(appointment['dateTime'])} has been {new_status}.\n\n"
                     f"Appointment ID: {appointment_id}"
                 )}}
             }

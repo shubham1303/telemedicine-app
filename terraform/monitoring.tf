@@ -1,16 +1,20 @@
 # Ops dashboard + a few alarms. Nothing here changes how the app behaves.
 
+# names are built from project_name on purpose rather than referencing the lambda/stage
+# resources, so `terraform apply -target` on these doesn't drag the app resources along
 locals {
   functions = {
-    "book"         = aws_lambda_function.book_appointment.function_name
-    "list"         = aws_lambda_function.list_appointments.function_name
-    "update"       = aws_lambda_function.update_appointment.function_name
-    "providers"    = aws_lambda_function.manage_providers.function_name
-    "reminder"     = aws_lambda_function.reminder.function_name
-    "post-confirm" = aws_lambda_function.post_confirmation.function_name
+    "book"         = "${var.project_name}-book-appointment"
+    "list"         = "${var.project_name}-list-appointments"
+    "update"       = "${var.project_name}-update-appointment"
+    "providers"    = "${var.project_name}-manage-providers"
+    "reminder"     = "${var.project_name}-reminder"
+    "post-confirm" = "${var.project_name}-post-confirmation"
   }
 
-  api_dims = ["ApiName", aws_api_gateway_rest_api.main.name, "Stage", aws_api_gateway_stage.main.stage_name]
+  api_name  = "${var.project_name}-api"
+  api_stage = "prod"
+  api_dims  = ["ApiName", local.api_name, "Stage", local.api_stage]
 
   # pull ERROR lines and python tracebacks out of every lambda's logs
   error_log_query = join(" | ", concat(
@@ -32,7 +36,7 @@ resource "aws_cloudwatch_dashboard" "ops" {
       {
         type = "text", x = 0, y = 0, width = 24, height = 2
         properties = {
-          markdown = "## ${var.project_name}\nAPI on API Gateway (stage `${aws_api_gateway_stage.main.stage_name}`), six Lambdas, DynamoDB, SES for email and an hourly reminder job. Alarms go to the `${aws_sns_topic.alerts.name}` SNS topic."
+          markdown = "## ${var.project_name}\nAPI on API Gateway (stage `${local.api_stage}`), six Lambdas, DynamoDB, SES for email and an hourly reminder job. Alarms go to the `${aws_sns_topic.alerts.name}` SNS topic."
         }
       },
 
@@ -194,7 +198,7 @@ resource "aws_cloudwatch_metric_alarm" "api_5xx" {
   alarm_description   = "The API returned server errors in the last 5 minutes"
   namespace           = "AWS/ApiGateway"
   metric_name         = "5XXError"
-  dimensions          = { ApiName = aws_api_gateway_rest_api.main.name, Stage = aws_api_gateway_stage.main.stage_name }
+  dimensions          = { ApiName = local.api_name, Stage = local.api_stage }
   statistic           = "Sum"
   period              = 300
   evaluation_periods  = 1
@@ -245,7 +249,7 @@ resource "aws_cloudwatch_metric_alarm" "reminder_not_running" {
   alarm_description   = "The hourly reminder Lambda hasn't run for 2 hours"
   namespace           = "AWS/Lambda"
   metric_name         = "Invocations"
-  dimensions          = { FunctionName = aws_lambda_function.reminder.function_name }
+  dimensions          = { FunctionName = local.functions["reminder"] }
   statistic           = "Sum"
   period              = 3600
   evaluation_periods  = 2

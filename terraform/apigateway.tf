@@ -380,6 +380,31 @@ resource "aws_api_gateway_integration_response" "provider_id_options" {
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
+  # without this the deployment never changes after it's first created, so new
+  # routes (like the CORS OPTIONS methods) never reach the stage. That's how the
+  # live stage ended up on a deployment made by hand in the console
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_integration.get_appointments,
+      aws_api_gateway_integration.post_appointments,
+      aws_api_gateway_integration.put_appointment,
+      aws_api_gateway_integration.get_providers,
+      aws_api_gateway_integration.post_providers,
+      aws_api_gateway_integration.put_provider,
+      aws_api_gateway_integration.delete_provider,
+      aws_api_gateway_integration_response.appointments_options,
+      aws_api_gateway_integration_response.appointment_id_options,
+      aws_api_gateway_integration_response.providers_options,
+      aws_api_gateway_integration_response.provider_id_options,
+      aws_api_gateway_method.get_appointments.authorization,
+      aws_api_gateway_authorizer.cognito,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [
     aws_api_gateway_integration.get_appointments,
     aws_api_gateway_integration.post_appointments,
@@ -388,6 +413,10 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.post_providers,
     aws_api_gateway_integration.put_provider,
     aws_api_gateway_integration.delete_provider,
+    aws_api_gateway_integration_response.appointments_options,
+    aws_api_gateway_integration_response.appointment_id_options,
+    aws_api_gateway_integration_response.providers_options,
+    aws_api_gateway_integration_response.provider_id_options,
   ]
 }
 

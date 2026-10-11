@@ -46,11 +46,12 @@ and a patient can only cancel.
 You'll need an AWS account, Terraform, Node, and an S3 bucket + DynamoDB table for
 Terraform state.
 
-1. Zip each lambda (Terraform expects `lambdas/<name>/function.zip`):
+1. Build the lambda zips (Terraform expects `lambdas/<name>/function.zip`):
    ```sh
-   cd lambdas/book_appointment && zip function.zip handler.py && cd ../..
-   # same for the other five
+   python scripts/build_lambdas.py
    ```
+   The script builds the same zip on any machine, so Terraform only redeploys a
+   function when its `handler.py` actually changed. Rerun it after editing a handler.
 2. Copy `terraform/backend.hcl.example` to `backend.hcl` and
    `terraform/terraform.tfvars.example` to `terraform.tfvars`, and fill them in.
 3. Apply:

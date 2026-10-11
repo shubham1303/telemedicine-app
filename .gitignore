@@ -16,3 +16,6 @@ lambdas/*/function.zip
 # scratch files from testing with the aws cli
 provider*.json
 response.json
+
+# saved terraform plans
+*.tfplan

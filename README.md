@@ -89,6 +89,18 @@ the reminder job's hourly runs, SES sends/bounces, Cognito sign-ups and sign-ins
 DynamoDB throttling, and a panel that pulls recent ERROR lines and tracebacks out of
 all the Lambda log groups.
 
+![Ops dashboard, top](docs/images/ops-dashboard-top.webp)
+
+![Ops dashboard, bottom](docs/images/ops-dashboard-bottom.webp)
+
+The traffic in these screenshots is test data. I invoked the Lambdas directly with
+fake patient/provider/admin requests, so the API panels only show a few
+unauthenticated calls (the 4xx). It did turn up something useful though. The test
+patients had no email address, so every confirmation email failed. The handlers
+catch that and carry on, which means the Lambda error count stays at 0 and no alarm
+fires. The only place it shows up is the "Recent Lambda errors" log panel at the
+bottom. Swallowed SES failures should probably be their own metric/alarm.
+
 Set `alert_email` in `terraform.tfvars` and AWS will send a confirmation email to
 that address before alarms start arriving. Cost-wise it should fit in the free tier
 (3 dashboards and 10 alarm metrics are free).

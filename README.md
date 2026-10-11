@@ -71,6 +71,28 @@ Terraform state.
    recipients need to be verified too, otherwise emails silently don't arrive.
 7. Sign up, then add yourself to the `Admins` group in the Cognito console.
 
+## Monitoring
+
+`terraform/monitoring.tf` sets up a CloudWatch dashboard (`telemedicine-ops`) and
+three alarms that email you through SNS:
+
+- the API returned any 5xx errors in the last 5 minutes
+- any of the six Lambdas threw an error
+- the reminder job hasn't run for 2 hours
+
+The last one is the one I actually care about. If the EventBridge schedule breaks,
+nothing errors, reminders just quietly stop going out. So that alarm treats
+*missing* data as a failure instead of ignoring it.
+
+The dashboard has API traffic, errors and latency, Lambda errors and p90 duration,
+the reminder job's hourly runs, SES sends/bounces, Cognito sign-ups and sign-ins,
+DynamoDB throttling, and a panel that pulls recent ERROR lines and tracebacks out of
+all the Lambda log groups.
+
+Set `alert_email` in `terraform.tfvars` and AWS will send a confirmation email to
+that address before alarms start arriving. Cost-wise it should fit in the free tier
+(3 dashboards and 10 alarm metrics are free).
+
 ## Known issues
 
 Still rough in a few places:

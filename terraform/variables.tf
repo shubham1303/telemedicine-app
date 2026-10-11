@@ -20,3 +20,8 @@ variable "ses_email" {
   description = "Verified email address for SES to send notifications"
   type        = string
 }
+variable "alert_email" {
+  description = "Where CloudWatch alarms get emailed. Leave empty to skip the subscription"
+  type        = string
+  default     = ""
+}
